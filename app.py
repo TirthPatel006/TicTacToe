@@ -1,17 +1,15 @@
 from flask import Flask, render_template, request, jsonify
 import random
+import os
 
 app = Flask(__name__)
 
-# --- Game Logic ---
 def check_winner(board):
-    wins = [
-        (0, 1, 2), (3, 4, 5), (6, 7, 8),
-        (0, 3, 6), (1, 4, 7), (2, 5, 8),
-        (0, 4, 8), (2, 4, 6)
-    ]
-    for i, j, k in wins:
-        if board[i] == board[j] == board[k] and board[i] != "":
+    wins = [(0,1,2),(3,4,5),(6,7,8),
+            (0,3,6),(1,4,7),(2,5,8),
+            (0,4,8),(2,4,6)]
+    for i,j,k in wins:
+        if board[i]==board[j]==board[k] and board[i] != "":
             return board[i]
     if "" not in board:
         return "Draw"
@@ -49,38 +47,34 @@ def best_ai_move(board, player, ai):
                 move = i
     return move
 
-# --- Routes ---
 @app.route("/")
 def index():
     return render_template("index.html")
 
 @app.route("/move", methods=["POST"])
 def move():
-    try:
-        data = request.get_json()
-        board = data["board"]
-        player = data.get("player", "X")
-        ai = data.get("ai", "O")
-        mode = data.get("mode", "normal")
+    data = request.get_json()
+    board = data["board"]
+    player = data.get("player", "X")
+    ai = data.get("ai", "O")
+    mode = data.get("mode", "normal")
 
-        if check_winner(board):
-            return jsonify({"board": board, "winner": check_winner(board)})
+    if check_winner(board):
+        return jsonify({"board": board, "winner": check_winner(board)})
 
-        if mode == "god":
-            move = best_ai_move(board, player, ai)
-            if move is not None:
-                board[move] = ai
-        else:
-            empty = [i for i in range(9) if board[i] == ""]
-            if empty:
-                board[random.choice(empty)] = ai
+    if mode == "god":
+        move = best_ai_move(board, player, ai)
+        if move is not None:
+            board[move] = ai
+    else:
+        empty = [i for i in range(9) if board[i] == ""]
+        if empty:
+            board[random.choice(empty)] = ai
 
-        winner = check_winner(board)
-        return jsonify({"board": board, "winner": winner})
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    winner = check_winner(board)
+    return jsonify({"board": board, "winner": winner})
 
-# --- Run ---
+# ✅ This works both locally and on Render
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use Render's PORT env or fallback to 5000
+    app.run(host="0.0.0.0", port=port)
