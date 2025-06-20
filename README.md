@@ -1,4 +1,3 @@
-# TicTakToe
 # 🎮 Unbeatable Tic Tac Toe Game (Python)
 
 This project is a **Python-based Tic Tac Toe game** where a human player competes against an **unbeatable AI opponent**. The AI uses the **Minimax algorithm** to ensure it never loses!
