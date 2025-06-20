@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; }
+    .grid { display: grid; grid-template-columns: repeat(3, 100px); margin: 20px auto; gap: 5px; }
+    .cell {
+      width: 100px; height: 100px;
+      font-size: 2em; cursor: pointer;
+      background: #eee; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .disabled { pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+  <input type="text" id="nameInput" placeholder="Enter your name" />
+  <button onclick="startGame()">Start</button>
+  <div class="grid" id="grid" style="display:none;"></div>
+  <h2 id="status"></h2>
+
+  <script>
+    let board = Array(9).fill("");
+    let player = "X";
+    let ai = "O";
+    let mode = "normal";
+    const grid = document.getElementById("grid");
+
+    function startGame() {
+      const name = document.getElementById("nameInput").value.trim().toLowerCase();
+      if (name === "tirth") {
+        alert("You are my creator. I can't play against you.");
+        document.getElementById("status").textContent = "Creator mode: game disabled.";
+        return;
+      } else if (name === "lucifer") {
+        alert("Welcome, Lord Lucifer. God Mode activated.");
+        mode = "god";
+      }
+      document.getElementById("grid").style.display = "grid";
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = "";
+      board.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = val;
+        cell.onclick = () => handleClick(i);
+        grid.appendChild(cell);
+      });
+    }
+
+    function handleClick(i) {
+      if (board[i] || document.getElementById("status").textContent) return;
+      board[i] = player;
+      render();
+      fetch("/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ board, player, ai, mode })
+      })
+      .then(res => res.json())
+      .then(data => {
+        board = data.board;
+        render();
+        if (data.winner) {
+          document.getElementById("status").textContent =
+            data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
