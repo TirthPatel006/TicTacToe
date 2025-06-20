@@ -3,75 +3,84 @@ import random
 
 app = Flask(__name__)
 
+# --- Game Logic ---
 def check_winner(board):
-    wins = [(0,1,2), (3,4,5), (6,7,8),
-            (0,3,6), (1,4,7), (2,5,8),
-            (0,4,8), (2,4,6)]
+    wins = [
+        (0, 1, 2), (3, 4, 5), (6, 7, 8),
+        (0, 3, 6), (1, 4, 7), (2, 5, 8),
+        (0, 4, 8), (2, 4, 6)
+    ]
     for i, j, k in wins:
-        if board[i] == board[j] == board[k] and board[i] != '':
+        if board[i] == board[j] == board[k] and board[i] != "":
             return board[i]
-    if '' not in board:
-        return 'Draw'
+    if "" not in board:
+        return "Draw"
     return None
 
-def minimax(board, is_maximizing, player, ai):
+def minimax(board, is_max, player, ai):
     winner = check_winner(board)
     if winner == ai:
         return 1
     elif winner == player:
         return -1
-    elif winner == 'Draw':
+    elif winner == "Draw":
         return 0
 
-    if is_maximizing:
-        best = -float('inf')
-        for i in range(9):
-            if board[i] == '':
-                board[i] = ai
-                score = minimax(board, False, player, ai)
-                board[i] = ''
-                best = max(score, best)
-        return best
-    else:
-        best = float('inf')
-        for i in range(9):
-            if board[i] == '':
-                board[i] = player
-                score = minimax(board, True, player, ai)
-                board[i] = ''
-                best = min(score, best)
-        return best
+    scores = []
+    for i in range(9):
+        if board[i] == "":
+            board[i] = ai if is_max else player
+            score = minimax(board, not is_max, player, ai)
+            board[i] = ""
+            scores.append(score)
 
+    return max(scores) if is_max else min(scores)
+
+def best_ai_move(board, player, ai):
+    best_score = -float('inf')
+    move = None
+    for i in range(9):
+        if board[i] == "":
+            board[i] = ai
+            score = minimax(board, False, player, ai)
+            board[i] = ""
+            if score > best_score:
+                best_score = score
+                move = i
+    return move
+
+# --- Routes ---
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
 
 @app.route("/move", methods=["POST"])
 def move():
-    data = request.json
-    board = data["board"]
-    player = data["player"]
-    ai = data["ai"]
-    mode = data.get("mode")
+    try:
+        data = request.get_json()
+        board = data["board"]
+        player = data.get("player", "X")
+        ai = data.get("ai", "O")
+        mode = data.get("mode", "normal")
 
-    if mode == "god":
-        best_score = -float('inf')
-        best_move = None
-        for i in range(9):
-            if board[i] == '':
-                board[i] = ai
-                score = minimax(board, False, player, ai)
-                board[i] = ''
-                if score > best_score:
-                    best_score = score
-                    best_move = i
-        if best_move is not None:
-            board[best_move] = ai
-    else:
-        empty = [i for i in range(9) if board[i] == '']
-        if empty:
-            move = random.choice(empty)
-            board[move] = ai
+        if check_winner(board):
+            return jsonify({"board": board, "winner": check_winner(board)})
 
-    winner = check_winner(board)
-    return jsonify({"board": board, "winner": winner})
+        if mode == "god":
+            move = best_ai_move(board, player, ai)
+            if move is not None:
+                board[move] = ai
+        else:
+            empty = [i for i in range(9) if board[i] == ""]
+            if empty:
+                board[random.choice(empty)] = ai
+
+        winner = check_winner(board)
+        return jsonify({"board": board, "winner": winner})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+# --- Run ---
+if __name__ == "__main__":
+    app.run(debug=True)
