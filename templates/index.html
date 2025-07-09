@@ -144,36 +144,36 @@
     }
 
     function render(winningIndices = []) {
-      const grid = document.getElementById("grid");
-      grid.innerHTML = "";
-      board.forEach((val, i) => {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.textContent = val;
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
-        cell.classList.remove("disabled", "winning", "played");
-        cell.onclick = null;
+  board.forEach((val, i) => {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.textContent = val;
 
-        if (val !== "" && i === lastPlayedIndex) {
-          cell.classList.add("played");
-        }
+    cell.classList.remove("disabled", "winning", "played");
+    cell.onclick = null;
 
-        if (winningIndices.includes(i)) {
-          cell.classList.add("winning");
-        }
-
-        if (!val && playerTurn) {
-          cell.onclick = () => makeMove(i);
-        }
-
-        if (val !== "") {
-          cell.classList.add("disabled");
-        }
-
-        grid.appendChild(cell);
-      });
+    if (val !== "" && i === lastPlayedIndex) {
+      cell.classList.add("played");
     }
 
+    if (winningIndices.includes(i)) {
+      cell.classList.add("winning");
+    }
+
+    if (val === "") {
+      if (playerTurn) {
+        cell.onclick = () => makeMove(i);
+      }
+    } else {
+      cell.classList.add("disabled");
+    }
+
+    grid.appendChild(cell);
+  });
+}
     function makeMove(i) {
       if (!playerTurn || board[i]) return;
 
