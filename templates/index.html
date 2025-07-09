@@ -24,11 +24,6 @@
       100% { box-shadow: 0 0 5px 2px lime; }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 100px);
@@ -206,6 +201,9 @@
           const btn = document.getElementById("restartBtn");
           btn.style.display = "inline-block";
           setTimeout(() => btn.classList.add("show"), 10);
+
+          // ✅ Block further moves after game ends
+          playerTurn = false;
         } else {
           playerTurn = true;
         }
