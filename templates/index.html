@@ -190,6 +190,27 @@
         }
       }
     });
+    let pressTimer;
+  const title = document.querySelector("h1");
+
+  title.addEventListener("touchstart", () => {
+    pressTimer = setTimeout(() => {
+      const code = prompt("👁 Secret code:");
+      if (code && code.trim().toLowerCase() === "lucifer") {
+        mode = "normal";
+        alert("😈 Noob Mode Activated! AI will now play randomly.");
+      } else if (code && code.trim().toLowerCase() === "god") {
+        mode = "god";
+        alert("⚡ God Mode Activated! AI is now unbeatable.");
+      } else {
+        alert("❌ Incorrect code.");
+      }
+    }, 1000); // long press = 1 second
+  });
+
+  title.addEventListener("touchend", () => {
+    clearTimeout(pressTimer);
+  });
   </script>
 
   <footer>
