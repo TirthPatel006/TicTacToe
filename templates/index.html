@@ -1,238 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Tic Tac Toe - God Mode</title>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #4facfe, #00f2fe);
-      color: #fff;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      font-family: Arial, sans-serif;
       text-align: center;
+      color: white;
+      padding: 40px;
     }
-
-    h1 {
-      margin-top: 30px;
-      font-size: 2.5em;
-    }
-
-    #formArea {
-      margin-top: 20px;
-    }
-
-    input, button {
-      padding: 10px 15px;
-      font-size: 1em;
-      margin: 10px 5px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    input {
-      width: 200px;
-    }
-
-    button {
-      cursor: pointer;
-      background-color: #ffffff;
-      color: #333;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background-color: #eee;
-    }
-
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 100px);
-      grid-gap: 8px;
+      gap: 10px;
       justify-content: center;
-      margin: 40px auto 10px;
+      margin-top: 20px;
     }
-
     .cell {
       width: 100px;
       height: 100px;
-      font-size: 2.2em;
-      font-weight: bold;
-      cursor: pointer;
-      background: #ffffffcc;
-      color: #333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 2em;
+      background: white;
+      color: black;
       border-radius: 10px;
-      transition: background 0.3s, transform 0.1s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
     }
-
-    .cell:hover {
-      background: #ffffffee;
-      transform: scale(1.05);
-    }
-
-    .cell.disabled {
+    .disabled {
       pointer-events: none;
       background: #ccc;
     }
-
-    #status {
-      font-size: 1.3em;
-      margin-top: 20px;
-    }
-
-    #restartBtn {
-      padding: 10px 20px;
-      font-size: 1em;
-      margin-top: 15px;
-      display: none;
-    }
     #creatorOverlay {
+      display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, #000 30%, #111 100%);
-      color: #0f0;
+      inset: 0;
+      background: black;
+      color: lime;
       font-size: 2em;
-      display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
       z-index: 9999;
-      opacity: 0;
-      pointer-events: none;
-      animation: fadeIn 2.5s ease forwards;
     }
-
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        pointer-events: all;
-      }
+    footer {
+      margin-top: 60px;
+      font-size: 1.1em;
     }
-
-    #creatorMessage {
-      animation: pulse 2s infinite;
-      text-shadow: 0 0 20px #0f0;
-      text-align: center;
-    }
-
-    @keyframes pulse {
-      0%   { transform: scale(1); opacity: 0.8; }
-      50%  { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
-    }
-
-    #resetCreatorBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1em;
-      background-color: #0f0;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    footer a {
+      color: #fff;
+      text-decoration: underline;
+      margin: 0 10px;
     }
   </style>
 </head>
 <body>
-
   <h1>Tic Tac Toe</h1>
-
-  <div id="formArea">
-    <input type="text" id="nameInput" placeholder="Enter your name" />
-    <button onclick="startGame()">Start Game</button>
-  </div>
+  <input type="text" id="nameInput" placeholder="Enter your name">
+  <button onclick="startGame()">Start Game</button>
 
   <div class="grid" id="grid" style="display:none;"></div>
-
   <h2 id="status"></h2>
-  <button id="restartBtn" onclick="restartGame()">Restart Game</button>
-  <div id="creatorOverlay" style="display:none;">
-    <div id="creatorMessage">
-      👑 Creator Mode Activated<br>
-      I cannot challenge my master.
-      <br><br>
-      <button id="resetCreatorBtn" onclick="resetToMain()">Back to Main</button>
+  <button onclick="restartGame()" id="restartBtn" style="display:none;">Restart</button>
+
+  <div id="creatorOverlay">
+    <div>
+      <p>👑 I Accept My Defeat</p>
+      <p>I cannot challenge my master.</p>
+      <button onclick="backToStart()">Back</button>
     </div>
   </div>
 
   <script>
-    let board = Array(9).fill("");
-    let player = "X";
-    let ai = "O";
-    let mode = "god";
+  let board = Array(9).fill("");
+  let mode = "god";
+  let playerTurn = true;
+
+  function startGame() {
+    const name = document.getElementById("nameInput").value.trim().toLowerCase();
+    if (name === "tirth") {
+      document.getElementById("creatorOverlay").style.display = "flex";
+      return;
+    }
+    board.fill("");
+    playerTurn = true;
+    document.getElementById("grid").style.display = "grid";
+    document.getElementById("status").textContent = "";
+    document.getElementById("restartBtn").style.display = "none";
+    render();
+  }
+
+  function backToStart() {
+    document.getElementById("creatorOverlay").style.display = "none";
+    document.getElementById("nameInput").value = "";
+  }
+  function render() {
     const grid = document.getElementById("grid");
-
-    function startGame() {
-      const name = document.getElementById("nameInput").value.trim().toLowerCase();
-      document.getElementById("status").textContent = "";
-      document.getElementById("restartBtn").style.display = "none";
-      document.getElementById("creatorOverlay").style.display = "none";
-
-      board = Array(9).fill("");
-      render();
-
-      if (name === "tirth") {
-        grid.style.display = "none";
-        document.getElementById("creatorOverlay").style.display = "flex";
-        return;
+    grid.innerHTML = "";
+    board.forEach((val, i) => {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.textContent = val;
+      if (!val && playerTurn) {
+        cell.onclick = () => makeMove(i);
+      } else {
+        cell.classList.add("disabled");
       }
-      mode = "god";
-      grid.style.display = "grid";
-    }
+      grid.appendChild(cell);
+    });
+  }
+  function makeMove(i) {
+    if (!playerTurn || board[i]) return;
 
-    function render() {
-      grid.innerHTML = "";
-      board.forEach((val, i) => {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.textContent = val;
-        if (!val && !document.getElementById("status").textContent) {
-          cell.addEventListener("click", () => handleClick(i));
-        } else {
-          cell.classList.add("disabled");
-        }
-        grid.appendChild(cell);
-      });
-    }
+    board[i] = "X";
+    playerTurn = false;
+    render();
 
-    function handleClick(i) {
-      if (board[i] !== "" || document.getElementById("status").textContent) return;
-      board[i] = player;
+    fetch("/move", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({board, mode, player: "X", ai: "O"})
+    })
+    .then(res => res.json())
+    .then(data => {
+      board = data.board;
       render();
-
-      fetch("/move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ board, player, ai, mode })
-      })
-      .then(res => res.json())
-      .then(data => {
-        board = data.board;
+      if (data.winner) {
+        document.getElementById("status").textContent =
+          data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
+        document.getElementById("restartBtn").style.display = "inline-block";
+      } else {
+        playerTurn = true;
         render();
-        if (data.winner) {
-          document.getElementById("status").textContent =
-            data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
-          document.getElementById("restartBtn").style.display = "inline-block";
-        }
-      });
-    }
+      }
+    });
+  }
 
-    function restartGame() {
-      board = Array(9).fill("");
-      document.getElementById("status").textContent = "";
-      document.getElementById("restartBtn").style.display = "none";
-      render();
+  function restartGame() {
+    board.fill("");
+    playerTurn = true;
+    document.getElementById("status").textContent = "";
+    document.getElementById("restartBtn").style.display = "none";
+    render();
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "~") {
+      const code = prompt("👁 Secret code:");
+      if (code && code.trim().toLowerCase() === "lucifer") {
+        mode = "normal";
+        alert("😈 Noob Mode Activated! AI will now play randomly.");
+      } else if (code && code.trim().toLowerCase() === "god") {
+        mode = "god";
+        alert("⚡ God Mode Activated! AI is now unbeatable.");
+      } else {
+        alert("❌ Incorrect code. Try again.");
+      }
     }
-
-    function resetToMain() {
-      document.getElementById("creatorOverlay").style.display = "none";
-      document.getElementById("nameInput").value = "";
-    }
-  </script>
-
+  });
+</script>
+  <footer>
+    <p>👨‍💻 Created by <strong>Tirth</strong></p>
+    <p>
+      🔗 Connect with me:
+      <a href="https://github.com/TirthPatel006" target="_blank">GitHub</a>
+      <a href="https://instagram.com/urfav.tirth" target="_blank">Instagram</a>
+    </p>
+  </footer>
 </body>
 </html>
