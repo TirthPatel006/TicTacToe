@@ -11,6 +11,13 @@
       color: white;
       padding: 40px;
     }
+
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 100px);
@@ -18,6 +25,7 @@
       justify-content: center;
       margin-top: 20px;
     }
+
     .cell {
       width: 100px;
       height: 100px;
@@ -29,11 +37,22 @@
       justify-content: center;
       align-items: center;
       cursor: pointer;
+      transition: transform 0.2s ease;
     }
+
+    .cell:hover {
+      transform: scale(1.1);
+    }
+
+    .played {
+      animation: pop 0.3s ease;
+    }
+
     .disabled {
       pointer-events: none;
       background: #ccc;
     }
+
     #creatorOverlay {
       display: none;
       position: fixed;
@@ -46,10 +65,12 @@
       flex-direction: column;
       z-index: 9999;
     }
+
     footer {
       margin-top: 60px;
       font-size: 1.1em;
     }
+
     footer a {
       color: #fff;
       text-decoration: underline;
@@ -75,92 +96,102 @@
   </div>
 
   <script>
-  let board = Array(9).fill("");
-  let mode = "god";
-  let playerTurn = true;
+    let board = Array(9).fill("");
+    let mode = "god";
+    let playerTurn = true;
 
-  function startGame() {
-    const name = document.getElementById("nameInput").value.trim().toLowerCase();
-    if (name === "tirth") {
-      document.getElementById("creatorOverlay").style.display = "flex";
-      return;
-    }
-    board.fill("");
-    playerTurn = true;
-    document.getElementById("grid").style.display = "grid";
-    document.getElementById("status").textContent = "";
-    document.getElementById("restartBtn").style.display = "none";
-    render();
-  }
-
-  function backToStart() {
-    document.getElementById("creatorOverlay").style.display = "none";
-    document.getElementById("nameInput").value = "";
-  }
-  function render() {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    board.forEach((val, i) => {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.textContent = val;
-      if (!val && playerTurn) {
-        cell.onclick = () => makeMove(i);
-      } else {
-        cell.classList.add("disabled");
+    function startGame() {
+      const name = document.getElementById("nameInput").value.trim().toLowerCase();
+      if (name === "tirth") {
+        document.getElementById("creatorOverlay").style.display = "flex";
+        return;
       }
-      grid.appendChild(cell);
-    });
-  }
-  function makeMove(i) {
-    if (!playerTurn || board[i]) return;
-
-    board[i] = "X";
-    playerTurn = false;
-    render();
-
-    fetch("/move", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({board, mode, player: "X", ai: "O"})
-    })
-    .then(res => res.json())
-    .then(data => {
-      board = data.board;
+      board.fill("");
+      playerTurn = true;
+      document.getElementById("grid").style.display = "grid";
+      document.getElementById("status").textContent = "";
+      document.getElementById("restartBtn").style.display = "none";
       render();
-      if (data.winner) {
-        document.getElementById("status").textContent =
-          data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
-        document.getElementById("restartBtn").style.display = "inline-block";
-      } else {
-        playerTurn = true;
+    }
+
+    function backToStart() {
+      document.getElementById("creatorOverlay").style.display = "none";
+      document.getElementById("nameInput").value = "";
+    }
+
+    function render() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      board.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = val;
+
+        if (val !== "") {
+          cell.classList.add("played");
+        }
+
+        if (!val && playerTurn) {
+          cell.onclick = () => makeMove(i);
+        } else {
+          cell.classList.add("disabled");
+        }
+
+        grid.appendChild(cell);
+      });
+    }
+
+    function makeMove(i) {
+      if (!playerTurn || board[i]) return;
+
+      board[i] = "X";
+      playerTurn = false;
+      render();
+
+      fetch("/move", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({board, mode, player: "X", ai: "O"})
+      })
+      .then(res => res.json())
+      .then(data => {
+        board = data.board;
         render();
+        if (data.winner) {
+          document.getElementById("status").textContent =
+            data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
+          document.getElementById("restartBtn").style.display = "inline-block";
+        } else {
+          playerTurn = true;
+          render();
+        }
+      });
+    }
+
+    function restartGame() {
+      board.fill("");
+      playerTurn = true;
+      document.getElementById("status").textContent = "";
+      document.getElementById("restartBtn").style.display = "none";
+      render();
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "~") {
+        const code = prompt("👁 Secret code:");
+        if (code && code.trim().toLowerCase() === "lucifer") {
+          mode = "normal";
+          alert("😈 Noob Mode Activated! AI will now play randomly.");
+        } else if (code && code.trim().toLowerCase() === "god") {
+          mode = "god";
+          alert("⚡ God Mode Activated! AI is now unbeatable.");
+        } else {
+          alert("❌ Incorrect code. Try again.");
+        }
       }
     });
-  }
+  </script>
 
-  function restartGame() {
-    board.fill("");
-    playerTurn = true;
-    document.getElementById("status").textContent = "";
-    document.getElementById("restartBtn").style.display = "none";
-    render();
-  }
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "~") {
-      const code = prompt("👁 Secret code:");
-      if (code && code.trim().toLowerCase() === "lucifer") {
-        mode = "normal";
-        alert("😈 Noob Mode Activated! AI will now play randomly.");
-      } else if (code && code.trim().toLowerCase() === "god") {
-        mode = "god";
-        alert("⚡ God Mode Activated! AI is now unbeatable.");
-      } else {
-        alert("❌ Incorrect code. Try again.");
-      }
-    }
-  });
-</script>
   <footer>
     <p>👨‍💻 Created by <strong>Tirth</strong></p>
     <p>
