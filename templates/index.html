@@ -151,6 +151,9 @@
         cell.className = "cell";
         cell.textContent = val;
 
+        cell.classList.remove("disabled", "winning", "played");
+        cell.onclick = null;
+
         if (val !== "" && i === lastPlayedIndex) {
           cell.classList.add("played");
         }
@@ -161,7 +164,9 @@
 
         if (!val && playerTurn) {
           cell.onclick = () => makeMove(i);
-        } else {
+        }
+
+        if (val !== "") {
           cell.classList.add("disabled");
         }
 
@@ -201,8 +206,6 @@
           const btn = document.getElementById("restartBtn");
           btn.style.display = "inline-block";
           setTimeout(() => btn.classList.add("show"), 10);
-
-          // ✅ Block further moves after game ends
           playerTurn = false;
         } else {
           playerTurn = true;
