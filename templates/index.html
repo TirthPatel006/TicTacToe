@@ -5,42 +5,38 @@
   <title>Tic Tac Toe</title>
   <style>
     input[type="text"] {
-  padding: 10px 15px;
-  font-size: 1em;
-  border: none;
-  border-radius: 8px;
-  margin: 10px;
-  width: 200px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-input[type="text"]:focus {
-  box-shadow: 0 0 15px rgba(255,255,255,0.5);
-  background-color: #e0f7ff;
-  color: black;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 1em;
-  background-color: white;
-  color: #0072ff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  background-color: #e6f2ff;
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-}
-
+      padding: 10px 15px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      margin: 10px;
+      width: 200px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    input[type="text"]:focus {
+      box-shadow: 0 0 15px rgba(255,255,255,0.5);
+      background-color: #e0f7ff;
+      color: black;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: white;
+      color: #0072ff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background-color: #e6f2ff;
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
     body {
       background: linear-gradient(to right, #00c6ff, #0072ff);
       font-family: Arial, sans-serif;
@@ -49,14 +45,12 @@ button:hover {
       padding: 40px;
     }
 
-   @keyframes pop {
-  0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1); }
-}
-.played {
-  animation: pop 0.6s ease; /* ← slower animation */
-}
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
     @keyframes fadeInUp {
       from {
         transform: translateY(40px);
@@ -116,7 +110,6 @@ button:hover {
       z-index: 9999;
       animation: fadeInUp 0.8s ease; /* animate the whole overlay in */
     }
-
     #creatorOverlay div {
       animation: fadeInUp 1.2s ease;
       text-align: center;
@@ -167,137 +160,124 @@ button:hover {
   </div>
 
   <script>
-  let board = Array(9).fill("");
-  let mode = "god";
-  let playerTurn = true;
-  let lastPlayedIndex = -1;
+    let board = Array(9).fill("");
+    let mode = "god";
+    let playerTurn = true;
 
-  function startGame() {
-    const name = document.getElementById("nameInput").value.trim().toLowerCase();
-    if (name === "tirth") {
-      document.getElementById("creatorOverlay").style.display = "flex";
-      return;
+    function startGame() {
+      const name = document.getElementById("nameInput").value.trim().toLowerCase();
+      if (name === "tirth") {
+        document.getElementById("creatorOverlay").style.display = "flex";
+        return;
+      }
+      board.fill("");
+      playerTurn = true;
+      document.getElementById("grid").style.display = "grid";
+      document.getElementById("status").textContent = "";
+      document.getElementById("restartBtn").style.display = "none";
+      render();
     }
-    board.fill("");
-    playerTurn = true;
-    lastPlayedIndex = -1;
-    document.getElementById("grid").style.display = "grid";
-    document.getElementById("status").textContent = "";
-    document.getElementById("restartBtn").style.display = "none";
-    render();
-  }
 
-  function backToStart() {
-    document.getElementById("creatorOverlay").style.display = "none";
-    document.getElementById("nameInput").value = "";
-  }
+    function backToStart() {
+      document.getElementById("creatorOverlay").style.display = "none";
+      document.getElementById("nameInput").value = "";
+    }
 
-  function render() {
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    board.forEach((val, i) => {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.textContent = val;
+    function render() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      board.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = val;
 
-      if (val !== "" && i === lastPlayedIndex) {
-        cell.classList.add("played");
-      }
-
-      if (!val && playerTurn) {
-        cell.onclick = () => makeMove(i);
-      } else {
-        cell.classList.add("disabled");
-      }
-
-      grid.appendChild(cell);
-    });
-  }
-
-  function makeMove(i) {
-    if (!playerTurn || board[i]) return;
-
-    board[i] = "X";
-    lastPlayedIndex = i;
-    playerTurn = false;
-    render();
-
-    fetch("/move", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ board, mode, player: "X", ai: "O" })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const newBoard = data.board;
-
-      // Find AI's move index
-      for (let j = 0; j < 9; j++) {
-        if (board[j] !== newBoard[j]) {
-          lastPlayedIndex = j;
-          break;
+        if (val !== "") {
+          cell.classList.add("played");
         }
-      }
 
-      board = newBoard;
+        if (!val && playerTurn) {
+          cell.onclick = () => makeMove(i);
+        } else {
+          cell.classList.add("disabled");
+        }
+
+        grid.appendChild(cell);
+      });
+    }
+
+    function makeMove(i) {
+      if (!playerTurn || board[i]) return;
+
+      board[i] = "X";
+      playerTurn = false;
       render();
 
-      if (data.winner) {
-        document.getElementById("status").textContent =
-          data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
-        document.getElementById("restartBtn").style.display = "inline-block";
-        playerTurn = false;
-      } else {
-        playerTurn = true;
+      fetch("/move", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({board, mode, player: "X", ai: "O"})
+      })
+      .then(res => res.json())
+      .then(data => {
+        board = data.board;
+        render();
+        if (data.winner) {
+          document.getElementById("status").textContent =
+            data.winner === "Draw" ? "It's a Draw!" : `${data.winner} Wins!`;
+          document.getElementById("restartBtn").style.display = "inline-block";
+        } else {
+          playerTurn = true;
+          render();
+        }
+      });
+    }
+
+    function restartGame() {
+      board.fill("");
+      playerTurn = true;
+      document.getElementById("status").textContent = "";
+      document.getElementById("restartBtn").style.display = "none";
+      render();
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "~") {
+        const code = prompt("👁 Secret code:");
+        if (code && code.trim().toLowerCase() === "lucifer") {
+          mode = "normal";
+          alert("😈 Noob Mode Activated! AI will now play randomly.");
+        } else if (code && code.trim().toLowerCase() === "god") {
+          mode = "god";
+          alert("⚡ God Mode Activated! AI is now unbeatable.");
+        } else {
+          alert("❌ Incorrect code. Try again.");
+        }
       }
     });
-  }
 
-  function restartGame() {
-    board.fill("");
-    playerTurn = true;
-    lastPlayedIndex = -1;
-    document.getElementById("status").textContent = "";
-    document.getElementById("restartBtn").style.display = "none";
-    render();
-  }
+    let pressTimer;
+    const title = document.querySelector("h1");
 
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "~") {
-      const code = prompt("👁 Secret code:");
-      if (code && code.trim().toLowerCase() === "lucifer") {
-        mode = "normal";
-        alert("😈 Noob Mode Activated! AI will now play randomly.");
-      } else if (code && code.trim().toLowerCase() === "god") {
-        mode = "god";
-        alert("⚡ God Mode Activated! AI is now unbeatable.");
-      } else {
-        alert("❌ Incorrect code. Try again.");
-      }
-    }
-  });
+    title.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => {
+        const code = prompt("👁 Secret code:");
+        if (code && code.trim().toLowerCase() === "lucifer") {
+          mode = "normal";
+          alert("😈 Noob Mode Activated! AI will now play randomly.");
+        } else if (code && code.trim().toLowerCase() === "god") {
+          mode = "god";
+          alert("⚡ God Mode Activated! AI is now unbeatable.");
+        } else {
+          alert("❌ Incorrect code.");
+        }
+      }, 1000);
+    });
 
-  let pressTimer;
-  const title = document.querySelector("h1");
+    title.addEventListener("touchend", () => {
+      clearTimeout(pressTimer);
+    });
+  </script>
 
-  title.addEventListener("touchstart", () => {
-    pressTimer = setTimeout(() => {
-      const code = prompt("👁 Secret code:");
-      if (code && code.trim().toLowerCase() === "lucifer") {
-        mode = "normal";
-        alert("😈 Noob Mode Activated! AI will now play randomly.");
-      } else if (code && code.trim().toLowerCase() === "god") {
-        mode = "god";
-        alert("⚡ God Mode Activated! AI is now unbeatable.");
-      } else {
-        alert("❌ Incorrect code.");
-      }
-    }, 1000);
-  });
-  title.addEventListener("touchend", () => {
-    clearTimeout(pressTimer);
-  });
-</script>
   <footer>
     <p>👨‍💻 Created by <strong>Tirth</strong></p>
     <p>
